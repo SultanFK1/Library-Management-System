@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { MediaType } from "@/lib/types"
+import { MediaType } from "@/lib/types";
 import { BookIcon, DiscIcon, GamepadIcon } from "lucide-react"
 
 interface Props {
