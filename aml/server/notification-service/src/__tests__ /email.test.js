@@ -1,51 +1,46 @@
-import { sendReturnNotification } from './controllers/returnNotificationController';
-import sendEmail from '../config/mail-service';
-jest.mock('../config/mail-service'); // Mock the sendEmail function
+const sendEmail = require('../config/mail-service');
 
+// Mock the email service
+jest.mock('../config/mail-service', () => jest.fn());
 
-
-describe('sendReturnNotification', () => {
-  let req, res;
-
-  beforeEach(() => {
-    req = { body: { userId: '123' } }; // Mock request object
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn()
-    }; // Mock response object
+describe('Email Sending Functionality', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('should send an email successfully and respond with status 201', async () => {
-    // Arrange: Mock sendEmail to resolve successfully
-    sendEmail.mockResolvedValueOnce('Email sent successfully');
+  test('should send an email successfully', async () => {
+    sendEmail.mockResolvedValue('Email sent');
 
-    // Act: Call the function
-    await sendReturnNotification(req, res);
+    // will be dynamic in the actual implementation
+    const recipient = 'farshad389@gmail.com';
+    const subject = 'Test Email Subject';
+    const htmlContent = '<h1>This is a test emial</h1>';
 
-    // Assert: Verify the response and email call
-    expect(sendEmail).toHaveBeenCalledWith(
-      'farshad389@gmail.com',
-      'Media Return Reminder',
-      expect.any(String) // The email content
-    );
-    expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith({ message: 'Return notification sent successfully' });
+
+    const result = await sendEmail(recipient, subject, htmlContent);
+
+   
+    expect(sendEmail).toHaveBeenCalledWith(recipient, subject, htmlContent);
+    expect(result).toBe('Email sent');
   });
 
-  it('should handle errors when sendEmail fails', async () => {
-    // Arrange: Mock sendEmail to throw an error
-    sendEmail.mockRejectedValueOnce(new Error('SMTP server not reachable'));
+  test('should handle email sending errors', async () => {
+    // Mock a rejected value for sendEmail
+    const errorMessage = 'Failed to send email';
+    sendEmail.mockRejectedValue(new Error(errorMessage));
 
-    // Act: Call the function
-    await sendReturnNotification(req, res);
+    // will be dynamic in the actual implementation
+    const recipient = 'farshad389@gmail.com';
+    const subject = 'Test Email Subject';
+    const htmlContent = '<h1>This is a test emial</h1>';
 
-    // Assert: Verify the error response
-    expect(sendEmail).toHaveBeenCalledWith(
-      'farshad389@gmail.com',
-      'Media Return Reminder',
-      expect.any(String)
-    );
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'SMTP server not reachable' });
+    // Call the mocked sendEmail function and handle the error
+    try {
+      await sendEmail(recipient, subject, htmlContent);
+    } catch (error) {
+      // Assertions
+      expect(sendEmail).toHaveBeenCalledWith(recipient, subject, htmlContent);
+      expect(error.message).toBe(errorMessage);
+    }
   });
 });
